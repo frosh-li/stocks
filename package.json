@@ -1,27 +1,27 @@
 {
-  "name": "stock_spider",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "dependencies": {
-    "moment": "^2.24.0",
-    "mongodb": "^3.2.7",
-    "mongoose": "^5.5.14",
-    "request": "^2.88.0",
-    "request-promise-native": "^1.0.7"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/frosh-li/stocks.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/frosh-li/stocks/issues"
-  },
-  "homepage": "https://github.com/frosh-li/stocks#readme"
+    "name": "stock_spider",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+        "moment": "^2.24.0",
+        "mongodb": "^3.2.7",
+        "mongoose": "^5.5.14",
+        "request": "^2.88.0",
+        "request-promise-native": "^1.0.7"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/frosh-li/stocks.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/frosh-li/stocks/issues"
+    },
+    "homepage": "https://github.com/frosh-li/stocks#readme"
 }
