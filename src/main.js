@@ -165,7 +165,7 @@ class Craw {
             .milliseconds(0);
         let url = `https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=${
             item.symbol
-        }&begin=${today}&period=day&type=before&count=-1&indicator=kline`;
+        }&begin=${today}&period=day&type=before&count=-1000&indicator=kline`;
         let options = {
             uri: url,
             json: true,
@@ -202,12 +202,12 @@ class Craw {
             });
             console.log(body.data.symbol, '获取记录数', tmp1.length);
             if (tmp1.length > 0) {
-                tmp1.forEach(async item => {
-                    await collection.deleteMany({
-                        symbol: item.symbol,
-                        timestamp: item.timestamp
-                    });
-                });
+//                tmp1.forEach(async item => {
+ //                   await collection.deleteMany({
+ //                       symbol: item.symbol,
+ //                       timestamp: item.timestamp
+ //                   });
+ //               });
                 await collection.insertMany(tmp1);
                 console.log('插入成功', body.data.symbol);
             }

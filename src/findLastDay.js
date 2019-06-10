@@ -50,7 +50,7 @@ async function parse(data) {
         return;
     }
     fIndex++;
-    console.log('开始分析', moment(now), currentStock);
+    console.log('开始分析', moment(now), currentStock, '第', fIndex+1, '只股票');
     let res = await singles
         .find({ symbol: currentStock.symbol, timestamp: { $lte: now } })
         .sort({ timestamp: -1 })
@@ -60,6 +60,7 @@ async function parse(data) {
         await parse(data);
         return;
     }
+    console.log(resArray);
     // 第一天跌 后三天涨 第5天跌 第六天涨
     if (
         resArray[3].percent < 0 &&
@@ -69,7 +70,7 @@ async function parse(data) {
         resArray[1].percent <= 10 &&
         resArray[0].percent >= 5 &&
         resArray[0].percent <= 10 &&
-        resArray[2].vol > resArray[3].vol &&
+        // resArray[2].vol > resArray[3].vol &&
         resArray[1].vol > resArray[2].vol &&
         resArray[0].vol > resArray[1].vol &&
         resArray[3].close < resArray[3].open &&
