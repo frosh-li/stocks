@@ -1,12 +1,9 @@
 const Config = require('./config');
 const rp = require('request-promise-native');
-const mongodb = require('mongodb');
-const MongoClient = require('mongodb').MongoClient;
-const url = 'mongodb://localhost:27017';
 const dates = require('./a');
 const moment = require('moment');
-
-const server = new mongodb.Server('localhost', 27017, { auto_reconnect: true });
+// const FX = require('./find');
+const MongoClient = require("mongodb").MongoClient;
 
 class Craw {
     constructor() {
@@ -14,19 +11,7 @@ class Craw {
         this.hasStart = true;
         this.Config = new Config();
         this.db = null;
-        MongoClient.connect(
-            url,
-            { useNewUrlParser: true },
-            async (err, client) => {
-                //   assert.equal(null, err);
-                console.log('Connected successfully to server');
-                this.db = client.db('stocks');
-                this.collection = await this.db.collection('singles', {
-                    safe: true
-                });
-                //   client.close();
-            }
-        );
+        this.allStocks = [];
         this.headers = {
             'User-Agent':
                 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36',
@@ -41,8 +26,37 @@ class Craw {
             'Upgrade-Insecure-Requests': 1
             //   "X-Requested-With": "XMLHttpRequest"
         };
+
+        
+        const url = "mongodb://localhost:27017";
+        MongoClient.connect(url, { useNewUrlParser: true }, async (err, client) => {
+            if (err) {
+                return console.log("mongo 数据库连接失败", err);
+            }
+            console.log("数据库连接成功");
+            this.db = client.db("stocks");
+            
+            this.singles = await this.db.collection("singles", { safe: true });
+            this.stocks = await this.db.collection("stocks", { safe: true });
+            await this.singles.remove();
+            await this.stocks.remove();
+            await this.db.createCollection("singles");
+            await this.singles.createIndex({
+                timestamp: 1,
+                symbol: 1,
+            });
+            await this.db.createCollection("stocks");
+        });
     }
     run() {
+        let db = this.db;
+        if (!db) {
+            setTimeout(() => {
+                this.run();
+            }, 100);
+            return;
+        }
+        
         this.url = this.Config.getUrl();
         console.log(this.url);
         this.startCrawAllStock();
@@ -76,25 +90,30 @@ class Craw {
         } else {
             this.save(body.data.list);
         }
-        this.Config.nextPage();
+        
     }
 
-    save(data) {
+    async save(data) {
         console.log(data);
         if (data.length === 0) {
+            console.log('all stocks', this.allStocks);
+            this.CrawSingle();
+            // FX(this.allStocks);
             return;
         }
-        let db = this.db;
-        db.collection('stocks', { safe: true }, (err, collection) => {
-            var tmp1 = data;
-            data.forEach(async item => {
-                await collection.remove({ symbol: item.symbol });
-            });
-            collection.insertMany(tmp1, { safe: true }, (err, result) => {
-                console.log(err, result);
-                this.startCrawAllStock();
-            });
-        });
+        data = data.map(item => {
+            return {
+                symbol: item.symbol,
+                name: item.name,
+            }
+        })
+        await this.db.collection("stocks", {safe: true}, async (err, collection) => {
+            await collection.insertMany(data);
+            this.Config.nextPage();
+            this.startCrawAllStock();
+        })
+        // this.allStocks = this.allStocks.concat(data);
+        
     }
 
     CrawSingle() {
@@ -165,7 +184,7 @@ class Craw {
             .milliseconds(0);
         let url = `https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=${
             item.symbol
-        }&begin=${today}&period=day&type=before&count=-1000&indicator=kline`;
+        }&begin=${today}&period=day&type=before&count=-10&indicator=kline`;
         let options = {
             uri: url,
             json: true,

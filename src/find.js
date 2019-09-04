@@ -40,18 +40,17 @@ async function Start() {
     let allStocks = await getStockList();
     parse(allStocks);
 }
-
+now = +moment(now).subtract(0, "days");
 async function parse(data) {
     let currentStock = data[fIndex];
     if (!currentStock) {
-
-
         console.log('所有的操作结束');
         console.log(out);
         process.exit();
         return;
     }
     fIndex++;
+    
     console.log("开始分析", moment(now), currentStock);
     let res = await singles
         .find({ symbol: currentStock.symbol, timestamp: { $lte: now } })
@@ -69,10 +68,10 @@ async function parse(data) {
         resArray[3].percent <= 10 &&
         resArray[2].percent > 1 &&
         resArray[2].percent <= 10 &&
-        resArray[1].percent >= 5 &&
-        resArray[1].percent <= 10 &&
+        resArray[1].percent >= 0 &&
+        resArray[1].percent <= 5 &&
         resArray[0].percent < 0 &&
-        resArray[0].percent >= -5 &&
+        resArray[0].percent >= -5  &&
         resArray[3].vol > resArray[4].vol &&
         resArray[2].vol > resArray[3].vol &&
         resArray[1].vol > resArray[2].vol &&
@@ -92,3 +91,5 @@ async function parse(data) {
     }
     await parse(data);
 }
+
+module.exports = Start;
