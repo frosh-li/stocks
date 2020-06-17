@@ -7,12 +7,15 @@
         "moment": "^2.24.0",
         "mongodb": "^3.2.7",
         "mongoose": "^5.5.14",
+        "node-fetch": "^2.6.0",
+        "redis": "^3.0.2",
         "request": "^2.88.0",
         "request-promise-native": "^1.0.7"
     },
     "devDependencies": {},
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "./getAllStocks.sh && node src/find.js"
     },
     "repository": {
         "type": "git",

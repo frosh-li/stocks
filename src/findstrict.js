@@ -45,11 +45,7 @@ async function parse(data) {
     let currentStock = data[fIndex];
     if (!currentStock) {
         console.log('所有的操作结束');
-        out.sort((a, b) => {
-            return a.turnoverrate > b.turnoverrate ? 1: -1
-        }).forEach(item => {
-            console.log('代码', item.symbol.symbol, '名称', item.symbol.name, '换手率', item.turnoverrate)
-        })
+        console.log(out);
         process.exit();
         return;
     }
@@ -71,21 +67,20 @@ async function parse(data) {
         resArray[3].percent > 1 &&
         resArray[2].percent > 1 &&
         resArray[1].percent >= 0 &&
-        resArray[0].percent < 0
-        // resArray[3].vol > resArray[4].vol &&
-        // resArray[2].vol > resArray[3].vol &&
-        // resArray[1].vol > resArray[2].vol &&
-        // resArray[0].vol < resArray[1].vol &&
-        // resArray[4].close < resArray[4].open &&
-        // resArray[3].close > resArray[3].open &&
-        // resArray[2].close > resArray[2].open &&
-        // resArray[1].close > resArray[1].open &&
-        // resArray[0].close < resArray[0].open
+        resArray[0].percent < 0 && 
+        resArray[3].vol > resArray[4].vol &&
+        resArray[2].vol > resArray[3].vol &&
+        resArray[1].vol > resArray[2].vol &&
+        resArray[0].vol < resArray[1].vol &&
+        resArray[4].close < resArray[4].open &&
+        resArray[3].close > resArray[3].open &&
+        resArray[2].close > resArray[2].open &&
+        resArray[1].close > resArray[1].open &&
+        resArray[0].close < resArray[0].open
     ) {
         console.log("后天涨幅", currentStock, resArray[0].percent, new Date(resArray[0].timestamp));
         out.push({
             symbol: currentStock,
-            turnoverrate: resArray[0].turnoverrate
             // percent: resArray[0].percent,
             // timestamp: new Date(resArray[0].timestamp)
         });

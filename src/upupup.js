@@ -1,5 +1,5 @@
 /**
- * 分析主升浪
+ * 找有量变异动的股票
  */
 const moment = require("moment");
 // 最终输出结果
@@ -45,11 +45,7 @@ async function parse(data) {
     let currentStock = data[fIndex];
     if (!currentStock) {
         console.log('所有的操作结束');
-        out.sort((a, b) => {
-            return a.turnoverrate > b.turnoverrate ? 1: -1
-        }).forEach(item => {
-            console.log('代码', item.symbol.symbol, '名称', item.symbol.name, '换手率', item.turnoverrate)
-        })
+        console.log(out);
         process.exit();
         return;
     }
@@ -59,37 +55,41 @@ async function parse(data) {
     let res = await singles
         .find({ symbol: currentStock.symbol, timestamp: { $lte: now } })
         .sort({ timestamp: -1 })
-        .limit(5);
+        .limit(40);
     let resArray = await res.toArray();
-    if (resArray.length < 5) {
+    if (resArray.length < 40) {
         await parse(data);
         return;
     }
-    // 第一天跌 后三天涨 第5天跌 第六天涨
-    if (
-        resArray[4].percent < 0 &&
-        resArray[3].percent > 1 &&
-        resArray[2].percent > 1 &&
-        resArray[1].percent >= 0 &&
-        resArray[0].percent < 0
-        // resArray[3].vol > resArray[4].vol &&
-        // resArray[2].vol > resArray[3].vol &&
-        // resArray[1].vol > resArray[2].vol &&
-        // resArray[0].vol < resArray[1].vol &&
-        // resArray[4].close < resArray[4].open &&
-        // resArray[3].close > resArray[3].open &&
-        // resArray[2].close > resArray[2].open &&
-        // resArray[1].close > resArray[1].open &&
-        // resArray[0].close < resArray[0].open
+    let halfVol = Math.floor(resArray[0].vol / 2);
+
+    let startFirst = true;
+    let counts = 0;
+    for(let i = 1 ; i < 40 ; i++) {
+        let vol = resArray[i].vol;
+        
+        if(i < 10 && vol > halfVol) {
+            startFirst = false;
+            break;
+        }
+        
+        if(vol <= halfVol) {
+            counts++;
+        }
+    }
+
+    if(
+        counts > 36
+        && startFirst
     ) {
-        console.log("后天涨幅", currentStock, resArray[0].percent, new Date(resArray[0].timestamp));
         out.push({
             symbol: currentStock,
-            turnoverrate: resArray[0].turnoverrate
-            // percent: resArray[0].percent,
-            // timestamp: new Date(resArray[0].timestamp)
+            percent: resArray[0].percent,
+            timestamp: new Date(resArray[0].timestamp)
         });
     }
+
+    
     await parse(data);
 }
 

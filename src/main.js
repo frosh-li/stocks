@@ -103,6 +103,7 @@ class Craw {
         }
         data = data.map(item => {
             return {
+                ...item,
                 symbol: item.symbol,
                 name: item.name,
             }
@@ -184,7 +185,7 @@ class Craw {
             .milliseconds(0);
         let url = `https://stock.xueqiu.com/v5/stock/chart/kline.json?symbol=${
             item.symbol
-        }&begin=${today}&period=day&type=before&count=-10&indicator=kline`;
+        }&begin=${today}&period=day&type=before&count=-100&indicator=kline`;
         let options = {
             uri: url,
             json: true,
@@ -216,7 +217,9 @@ class Craw {
                     high: citem[3],
                     low: citem[4],
                     close: citem[5],
-                    percent: citem[7]
+                    percent: citem[7],
+                    pb: citem[13],
+                    turnoverrate: citem[8], // 换手率
                 });
             });
             console.log(body.data.symbol, '获取记录数', tmp1.length);
