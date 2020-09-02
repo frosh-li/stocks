@@ -2,36 +2,12 @@
  * 实时获取资金流
  */
 const request = require('request-promise-native');
-const proxy_list = [
-  "223.247.164.77:4245",
-  "182.99.40.150:4272",
-  "121.56.38.120:4267",
-  "106.110.96.216:4258",
-  "59.35.224.66:4230",
-  "114.98.163.175:4236",
-  "117.94.183.43:4253",
-  "125.111.150.125:4205",
-  "60.168.24.7:4251",
-  "223.215.19.208:4245",
-  "36.57.85.160:4227",
-  "60.169.94.69:4282",
-  "111.72.136.136:4273",
-  "221.229.25.52:4226",
-  "221.210.54.231:4257",
-  "220.177.145.12:4232",
-  "114.104.130.45:4227",
-  "115.208.46.17:4280",
-  "59.58.62.180:4235",
-  "106.5.192.136:4227",
-]
+
 const moment = require('moment');
 const year = moment().subtract(1, 'day').year();
 const month = (moment().subtract(1, 'day').month() + 1).toString().padStart(2, '0');
 let day = moment().subtract(1, 'day').date().toString().padStart(2, '0');
-const redis = require('redis');
-const { promisify } = require("util");
-let client = redis.createClient(6379, '127.0.0.1');   // 监听消费者
-const keysAsync = promisify(client.keys).bind(client);
+
 console.log(year, month, day);
 const fetch = require('node-fetch');
 // 引入 events 模块
@@ -40,14 +16,14 @@ const events = require('events');
 const eventEmitter = new events.EventEmitter();
 const fork = require('child_process').fork;
 const maxProcess = 10;
+const fs = require('fs');
+const datapath = 'datas/' + moment().format('YYYY-MM-DD');
+if (!fs.existsSync(datapath)) {
+  fs.writeFile(datapath, "", () => {});
+}
 
-// 300160 秀强股份
-// 300045 华力创通
-// 002062 宏润建设
-// 000616 海航投资
-// 002151 北斗星通
-// 300379 东方通
-// 300598 诚迈科技
+let startLen = 1;
+
 
 
 let mainStocks = [];
@@ -68,25 +44,54 @@ eventEmitter.on('request:done', function(code) {
 }); 
 
 (async() => {
-  const res = await keysAsync(`stock:${moment().subtract(1, 'days').format("YYYY-MM-DD")}*`)
-  const stocks = res.map(item => {
-    const data = item.split(":");
-    return {
-      Code: data[2],
-      Name: data[3],
-    }
-  });
-  // console.log('stocks', stocks);
-  // stocks.length = 10;
-  mainStocks = [...stocks];
-  console.log('总数量为', stocks.length);
-  startFork(stocks);
+  const MongoClient = require("mongodb").MongoClient;
+  const url = "mongodb://localhost:27017";
+  let singles, db;
+  MongoClient.connect(url,{ useNewUrlParser: true }, async (err, client) => {
+    console.log("数据库连接成功");
+    db = await client.db("stocks");
+    singles = await db.collection("singles", { safe: true });
+        
+    const lastDay = await singles.find({}).sort({timestamp: -1}).limit(1);
+    const lastDayRes = await lastDay.toArray();
+    console.log(lastDayRes)
+    const res = await singles.find({timestamp: lastDayRes[0].timestamp, turnoverrate: {$gte: 4}});
+    const ret = await res.toArray();
+    const stocks = ret.map(item => ({Code: item.symbol.substring(2), Name: item.symbol}));
+    console.log('stocks', stocks)
+    mainStocks = [...stocks];
+    console.log('总数量为', stocks.length);
+    startFork(stocks);
+  })
+  
+  
+  // return;
+  // setTimeout(function() {
+  //   const hours = moment().hours();
+  //   const minute = moment().minute();
+  //   console.log('当前时间', hours, '时', minute, '分');
+  //   if(
+  //     (hours === 9 && minute >= 30) //9点30正式开盘
+  //     ||
+  //     (hours === 10)
+  //     ||
+  //     (hours === 11 && minute <= 30)
+  //     ||
+  //     (hours >= 13 && hours <= 15)
+  //    ) {
+  //       startFork(stocks);
+  //   }else{
+  //     console.log('没到开盘时间');
+  //     setTimeout(arguments.callee,1000);
+  //   }
+  // }, 1000)
+  
 })();
 
 const subs = {};
 const processes = {}
 for(let i = 0 ; i < maxProcess ; i++) {
-  let child = fork('./src/sub.js', [proxy_list[i]]);
+  let child = fork('./src/sub.js');
   child.on('message', (msg) => {
     if(msg.status === 'free') {
       subs[msg.pid] = {

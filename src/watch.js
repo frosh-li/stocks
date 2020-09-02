@@ -64,16 +64,16 @@ const processes = {}
 
 const stocks = [
   {
-    Code: '002980',
-    Name: '华盛昌',
+    Code: '300793',
+    Name: '佳禾智能',
   },
   {
-    Code: '300495',
-    Name: '美尚生态',
+    Code: '002907',
+    Name: '华森制药',
   },
   {
-    Code: '603823',
-    Name: '百合花',
+    Code: '603353',
+    Name: '和顺石油',
   },
 ];
 for(let i = 0 ; i < stocks.length ; i++) {
@@ -109,7 +109,7 @@ function startFork(stocks) {
     console.log('本轮已经结束');
     setTimeout(() => {
       startFork([...mainStocks]);
-    }, 60000);
+    }, 10000);
     return;
   }
   for(let key in subs) {

@@ -6,9 +6,10 @@ const redis = require('redis');
 const { promisify } = require("util");
 
 const moment = require('moment');
-const year = moment().subtract(1, 'day').year();
-const month = (moment().subtract(1, 'day').month() + 1).toString().padStart(2, '0');
+const year = moment().year();
+const month = (moment().month() + 1).toString().padStart(2, '0');
 let day = moment().date().toString().padStart(2, '0');
+day = '24'
 const keyword = encodeURIComponent(`${year}年${month}月${day}日并且沪深并且换手率>6`);
 const LIST_BY_HUANSHOU = `http://searchapi.eastmoney.com/bussiness/Web/StockAnalysis?keyword=${keyword}&pi=1&ps=1000&sort=TurnoverRate%7C1&_=${Date.now()}`;
 let client = redis.createClient(6379, '127.0.0.1');   // 监听消费者
@@ -52,7 +53,11 @@ console.log(LIST_BY_HUANSHOU);
       percent = cbody.data.f170;
       bk = cbody.data.f127; // 板块信息
       ltsz = cbody.data.f117; // 流通市值
-      await setAsync(`stock:${moment().format("YYYY-MM-DD")}:${code}:${stock.Name}`, JSON.stringify({
+      console.log(code, ltsz);
+      // if(percent >= 8) {
+      //   console.log('涨幅',percent, code,stock.Name,  bk,'换手' ,cbody.data.f168);
+      // }
+      await setAsync(`stock:2020-07-24:${code}:${stock.Name}`, JSON.stringify({
         bk,
         ltsz,
         percent,
